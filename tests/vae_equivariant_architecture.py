@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchmetrics
 from d4_equivariant import D4EquivariantConv, D4EquivariantConvTranspose
 
 class D4_Equivariant_VAE(nn.Module):
@@ -86,7 +87,7 @@ class D4_Equivariant_VAE(nn.Module):
 
         )
         self.tanh=nn.Tanh()  # Or Sigmoid depending on normalization
-        # Final layer outputs RGB values between -1 and 1
+        # Final layer outputs RGB values between -1 and 1 so Tanh
     
     
     def encode(self, x):
@@ -120,7 +121,7 @@ class D4_Equivariant_VAE(nn.Module):
         return x
     
     def vae_loss(self, recon_x, x, mu, logvar, beta=4):
-        # Reconstruction loss (MSE or L1 loss)
+        # Reconstruction loss MSE
         recon_loss = F.mse_loss(recon_x, x, reduction='sum')/ x.size(0)
 
         # Calculate M and N
@@ -132,8 +133,14 @@ class D4_Equivariant_VAE(nn.Module):
 
         # KL Divergence loss
         kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())/ x.size(0)
+
+        # SSIM loss
+        ssim = torchmetrics.image.ssim.SSIM(data_range=(-1,1))
+        ssim_loss = 1 - ssim(recon_x, x)  # 1 - SSIM because higher SSIM means better quality
+
         
-        return recon_loss + (beta_norm*kld_loss)
+        return recon_loss + (beta_norm*kld_loss) + ssim_loss
+    
     def forward(self, x):
         # Encode
         mu, logvar =self.encode(x)
