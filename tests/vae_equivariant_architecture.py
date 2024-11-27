@@ -122,7 +122,7 @@ class D4_Equivariant_VAE(nn.Module):
     
     def vae_loss(self, recon_x, x, mu, logvar, beta=4):
         # Reconstruction loss MSE
-        recon_loss = F.mse_loss(recon_x, x, reduction='sum')/ x.size(0)
+        recon_loss = F.mse_loss(recon_x, x, reduction='mean')
 
         # Calculate M and N
         M = self.latent_dim  # latent_dim
@@ -132,7 +132,7 @@ class D4_Equivariant_VAE(nn.Module):
         beta_norm = beta * (M/N)  # This ensures that the KL term remains in a balanced scale
 
         # KL Divergence loss
-        kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())/ x.size(0)
+        kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())/ (x.size(0) * M)
 
         # SSIM loss
         ssim = torchmetrics.image.ssim.SSIM(data_range=(-1,1))
