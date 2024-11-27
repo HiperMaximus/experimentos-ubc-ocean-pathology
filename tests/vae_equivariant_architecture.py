@@ -125,7 +125,7 @@ class D4_Equivariant_VAE(nn.Module):
         recon_loss = F.mse_loss(recon_x, x, reduction='sum')/ x.size(0)
 
         # Calculate M and N
-        M = mu.size(1)  # latent_dim
+        M = self.latent_dim  # latent_dim
         N = x.numel() / x.size(0)  # Total input size per sample (C * H * W)
         
         # Normalize the beta value
