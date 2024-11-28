@@ -8,4 +8,5 @@ tensorboard
 tqdm
 matplotlib
 scikit-learn
+notebook
 
