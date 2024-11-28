@@ -1,0 +1,11 @@
+numpy
+pandas[performance]
+torch
+torchvision
+torchaudio
+torchmetrics
+tensorboard
+tqdm
+matplotlib
+scikit-learn
+
