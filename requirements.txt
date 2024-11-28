@@ -1,12 +1,15 @@
+protobuf<5
 numpy
 pandas[performance]
 torch
 torchvision
 torchaudio
 torchmetrics
+tensorflow
 tensorboard
 tqdm
 matplotlib
 scikit-learn
 notebook
+ipywidgets
 

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchmetrics
+from torchmetrics.image import StructuralSimilarityIndexMeasure
 from d4_equivariant import D4EquivariantConv, D4EquivariantConvTranspose
 
 class D4_Equivariant_VAE(nn.Module):
@@ -135,7 +135,7 @@ class D4_Equivariant_VAE(nn.Module):
         kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())/ (x.size(0) * M)
 
         # SSIM loss
-        ssim = torchmetrics.image.ssim.SSIM(data_range=(-1,1))
+        ssim = StructuralSimilarityIndexMeasure(data_range=(-1,1)).to(x.device)
         ssim_loss = 1 - ssim(recon_x, x)  # 1 - SSIM because higher SSIM means better quality
 
         
