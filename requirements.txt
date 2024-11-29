@@ -5,7 +5,6 @@ torch
 torchvision
 torchaudio
 torchmetrics
-tensorflow
 tensorboard
 tqdm
 matplotlib

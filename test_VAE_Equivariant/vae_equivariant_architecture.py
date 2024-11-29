@@ -5,7 +5,7 @@ from torchmetrics.image import StructuralSimilarityIndexMeasure
 from d4_equivariant import D4EquivariantConv, D4EquivariantConvTranspose
 
 class D4_Equivariant_VAE(nn.Module):
-    def __init__(self, latent_dim):
+    def __init__(self, latent_dim:int):
         super(D4_Equivariant_VAE, self).__init__()
         self.latent_dim=latent_dim
 
@@ -126,16 +126,20 @@ class D4_Equivariant_VAE(nn.Module):
 
         # Calculate M and N
         M = self.latent_dim  # latent_dim
-        N = x.numel() / x.size(0)  # Total input size per sample (C * H * W)
+        N = x.size(1) * x.size(2) * x.size(3)  # C * H * W
         
         # Normalize the beta value
         beta_norm = beta * (M/N)  # This ensures that the KL term remains in a balanced scale
 
+        # Clamp logvar to prevent numerical instability
+        logvar = torch.clamp(logvar, min=-10, max=10)
+
+
         # KL Divergence loss
-        kld_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())/ (x.size(0) * M)
+        kld_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
         # SSIM loss
-        ssim = StructuralSimilarityIndexMeasure(data_range=(-1,1)).to(x.device)
+        ssim = StructuralSimilarityIndexMeasure(data_range=2).to(x.device)
         ssim_loss = 1 - ssim(recon_x, x)  # 1 - SSIM because higher SSIM means better quality
 
         
