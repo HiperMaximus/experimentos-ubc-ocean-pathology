@@ -64,7 +64,11 @@ class D4EquivariantConv(nn.Module):
 
 
         # Kaiming uniform initialization
-        nn.init.kaiming_uniform_(self.weight, a=0.01, mode='fan_in', nonlinearity='leaky_relu')
+        gain = nn.init.calculate_gain('leaky_relu',0.01)
+        adjusted_gain = gain / (self.num_transformations ** 0.5)  # Adjust the gain based on the number of transformations
+
+
+        nn.init.kaiming_uniform_(self.weight, a=adjusted_gain, mode='fan_in', nonlinearity='leaky_relu')
 
     def forward(self, x:torch.Tensor):
         # Create tensor to populate with all transformed kernels

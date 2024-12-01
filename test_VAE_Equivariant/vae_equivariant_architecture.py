@@ -121,6 +121,15 @@ class D4_Equivariant_VAE(nn.Module):
         return x
     
     def vae_loss(self, recon_x, x, mu, logvar, beta=4):
+        # Check for NaN in inputs
+        assert not torch.isnan(recon_x).any(), "recon_x contains NaN!"
+        assert not torch.isnan(x).any(), "x contains NaN!"
+        assert not torch.isnan(mu).any(), "mu contains NaN!"
+        assert not torch.isinf(mu).any(), "mu contains Inf!"
+        assert not torch.isnan(logvar).any(), "logvar contains NaN!"
+        assert not torch.isinf(logvar).any(), "logvar contains Inf!"
+
+
         # Reconstruction loss MSE
         recon_loss = F.mse_loss(recon_x, x, reduction='mean')
 
@@ -129,25 +138,30 @@ class D4_Equivariant_VAE(nn.Module):
         N = x.size(1) * x.size(2) * x.size(3)  # C * H * W
         
         # Normalize the beta value
-        beta_norm = beta * (M/N)  # This ensures that the KL term remains in a balanced scale
-
-        # Clamp logvar to prevent numerical instability
-        logvar = torch.clamp(logvar, min=-10, max=10)
+        beta_norm = beta * (M/(N+ 1e-8))  # This ensures that the KL term remains in a balanced scale and avoid division by zero
 
 
         # KL Divergence loss
         kld_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
         # SSIM loss
-        ssim = StructuralSimilarityIndexMeasure(data_range=2).to(x.device)
+        ssim = StructuralSimilarityIndexMeasure(data_range=(-1,1)).to(x.device)
         ssim_loss = 1 - ssim(recon_x, x)  # 1 - SSIM because higher SSIM means better quality
 
         
         return recon_loss + (beta_norm*kld_loss) + ssim_loss
     
     def forward(self, x):
+        assert not torch.isnan(x).any(), "x contains NaN!"
+
         # Encode
         mu, logvar =self.encode(x)
+        assert not torch.isnan(mu).any(), "mu contains NaN!"
+        assert not torch.isnan(logvar).any(), "logvar contains NaN!"
+
+        # Clamp logvar and mean to prevent numerical instability
+        logvar = torch.clamp(logvar, min=-10, max=10)
+        mu = torch.clamp(mu, min=-20, max=20)
 
         # Reparameterize
         std = torch.exp(0.5 * logvar)
@@ -156,4 +170,6 @@ class D4_Equivariant_VAE(nn.Module):
         
         # Decode
         x=self.decode(z)
+        assert not torch.isnan(x).any(), "recon_x contains NaN!"
+        
         return x, mu, logvar
