@@ -1,4 +1,7 @@
 protobuf<5
+mypy
+jaxtyping
+typeguard
 numpy
 pandas[performance]
 torch
